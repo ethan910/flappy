@@ -24,23 +24,26 @@ Red = (255, 0, 0)
 Blue = (0, 0, 255)
 Green = (0, 255, 0)
 score = 0 
-font = pygame.font.Font(None, 36)
+font = pygame.font.Font(None, 100)
 pipe = []
 def restartfn():
-    global score, gameover, flappy, bird_group
+    global score, gameover, flappy, bird_group, flying, groundscroll, is_collided
     bird_group.empty()
     pipe_group.empty()
     score = 0
     gameover = False
-
+    flying = False
     flappy = Bird(100, int(screen_height / 2))
     bird_group.add(flappy)
+    groundscroll = 5
+    is_collided = False
 
     y = random.randint(200, 400)
     pipe = Pipe(screen_width, y, "top", False) 
     pipe_group.add(pipe)
     pipe = Pipe(screen_width, y, "bottom", False)
     pipe_group.add(pipe)
+
     
 
 class Bird(pygame.sprite.Sprite):
@@ -121,19 +124,23 @@ class Pipe (pygame.sprite.Sprite):
             self.kill()
 
 class Button ():
-    def _init_(self, x, y):
+    def __init__(self, x, y):
         self.x = x
         self.y = y
         self.restart = pygame.image.load('img/restart.png')
         self.restart_btn = pygame.transform.scale(self.restart,(250, 100))
         self.rect = self.restart_btn.get_rect()
-    def draw(screen, self):
-        pos = pygame.mouse.get_pos()
+        self.rect.left = x
+        self.rect.top = y
+    def draw (self, screen):
+        if pygame.mouse.get_pressed()[0] == True:
+            pos = pygame.mouse.get_pos()
+            if self.rect.collidepoint(pos):
+                restartfn()
  
         screen.blit(self.restart_btn, (self.x, self.y))
 
-        if self.rect.collidepoint(pos):
-            restartfn()
+        
        
 
 
@@ -143,9 +150,9 @@ class Button ():
 
 bird_group = pygame.sprite.Group()
 pipe_group = pygame.sprite.Group()
-button = Button(int(screen_width / 2) - 100, int(ground_y / 2))
+button = Button(int(screen_width / 2) - 125, int(ground_y / 2))
 
-
+restartfn()
 
 running = True
 while running:
@@ -174,9 +181,11 @@ while running:
 
     bird_group.draw(screen)
     pipe_group.draw(screen)
+    score_text = font.render(f"{score}", True, White)
+    screen.blit(score_text, (410, 100))
 
     if gameover == True:
-        button.draw()
+        button.draw(screen)
     
     bird_group.update()
     pipe_group.update()
